@@ -1,6 +1,7 @@
 import type { IncomingMessage, ServerResponse } from 'node:http';
 import { criarApp } from './app';
 import { config } from './config';
+import { explicarFalhaDoBanco } from './db/diagnostico';
 import { migrate } from './db/migrate';
 import { popularSeVazio } from './db/seed';
 import { registrarAtrasos } from './jobs/atrasos';
@@ -19,6 +20,9 @@ let ultimaVerificacaoDeAtrasos = 0;
 function preparar(): Promise<void> {
   if (!preparo) {
     preparo = (async () => {
+      if (config.origemDoBanco === 'padrão local') {
+        throw new Error('Nenhuma variável com a URL do banco foi configurada.');
+      }
       await migrate(false);
       if (config.seedAutomatico && (await popularSeVazio())) {
         console.log('Banco vazio: dados de exemplo criados.');
@@ -35,7 +39,7 @@ export default async function handler(req: IncomingMessage, res: ServerResponse)
   try {
     await preparar();
   } catch (err) {
-    console.error('Falha ao preparar o banco:', err);
+    console.error(`Falha ao preparar o banco (variável: ${config.origemDoBanco}):`, err);
     res.statusCode = 503;
     res.setHeader('Content-Type', 'application/json; charset=utf-8');
     res.end(
@@ -43,6 +47,7 @@ export default async function handler(req: IncomingMessage, res: ServerResponse)
         status: 503,
         erro: 'Serviço indisponível',
         mensagem: 'Não foi possível conectar ao banco de dados. Confira se o Neon está ligado ao projeto na Vercel.',
+        detalhe: explicarFalhaDoBanco(err, config.origemDoBanco, config.naVercel),
       }),
     );
     return;

@@ -9,6 +9,8 @@ export const pool = new Pool({
   max: config.naVercel ? 3 : 10,
   // Na Vercel, conexões paradas são fechadas logo: o banco da Neon hiberna quando fica sem uso.
   idleTimeoutMillis: config.naVercel ? 10_000 : 30_000,
+  // Não deixa a função esperar até o limite da Vercel se o banco não responder.
+  connectionTimeoutMillis: config.naVercel ? 15_000 : 0,
 });
 
 // Se uma conexão parada cair (banco hibernou ou reiniciou), só registra: não pode derrubar a API.
