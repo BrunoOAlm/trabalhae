@@ -17,7 +17,7 @@ Sistema de trabalhos em grupo da faculdade: cada tarefa tem um responsável, ent
 ```bash
 docker compose up -d                          # banco
 cd backend && npm run seed && npm run dev     # API em :8080 (Swagger em /api/docs)
-cd backend && npm test                        # 107 testes
+cd backend && npm test                        # 114 testes
 cd frontend && npm run dev                    # site em :5173 (proxy /api -> :8080)
 cd frontend && npx tsc -b                     # checagem de tipos do front
 ```
