@@ -23,33 +23,34 @@ export function carregarMigracoes(): Migracao[] {
 
 /**
  * Aplica, em ordem, as migrações que ainda não rodaram (estilo Flyway).
- * Usa uma trava do PostgreSQL para que duas instâncias da API não migrem ao mesmo tempo.
+ * Tudo roda numa única transação com trava de transação (pg_advisory_xact_lock): duas instâncias
+ * da API não migram ao mesmo tempo, e a trava funciona também atrás de pooler em modo transação
+ * (a DATABASE_URL da Neon), onde travas de sessão não são suportadas. Se algo falhar, nada fica aplicado.
  */
 export async function migrate(log = true): Promise<void> {
   const client = await pool.connect();
   try {
-    await client.query('SELECT pg_advisory_lock($1)', [TRAVA_MIGRACAO]);
+    await client.query('BEGIN');
+    await client.query('SELECT pg_advisory_xact_lock($1)', [TRAVA_MIGRACAO]);
     await client.query(`CREATE TABLE IF NOT EXISTS schema_migrations (
       nome VARCHAR(200) PRIMARY KEY,
       aplicada_em TIMESTAMPTZ NOT NULL DEFAULT now()
     )`);
     const { rows } = await client.query<{ nome: string }>('SELECT nome FROM schema_migrations');
     const aplicadas = new Set(rows.map((r) => r.nome));
-    for (const { nome: arquivo, sql } of carregarMigracoes()) {
-      if (aplicadas.has(arquivo)) continue;
-      try {
-        await client.query('BEGIN');
-        await client.query(sql);
-        await client.query('INSERT INTO schema_migrations (nome) VALUES ($1)', [arquivo]);
-        await client.query('COMMIT');
-        if (log) console.log(`Migração aplicada: ${arquivo}`);
-      } catch (err) {
-        await client.query('ROLLBACK');
-        throw err;
-      }
+    const novas: string[] = [];
+    for (const { nome, sql } of carregarMigracoes()) {
+      if (aplicadas.has(nome)) continue;
+      await client.query(sql);
+      await client.query('INSERT INTO schema_migrations (nome) VALUES ($1)', [nome]);
+      novas.push(nome);
     }
+    await client.query('COMMIT');
+    if (log) novas.forEach((nome) => console.log(`Migração aplicada: ${nome}`));
+  } catch (err) {
+    await client.query('ROLLBACK').catch(() => undefined);
+    throw err;
   } finally {
-    await client.query('SELECT pg_advisory_unlock($1)', [TRAVA_MIGRACAO]).catch(() => undefined);
     client.release();
   }
 }
