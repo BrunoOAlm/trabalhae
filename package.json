@@ -1,0 +1,17 @@
+{
+  "name": "trabalhae",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Trabalhaê: organização de trabalhos em grupo (backend + frontend)",
+  "workspaces": [
+    "backend",
+    "frontend"
+  ],
+  "scripts": {
+    "build:vercel": "npm run build -w backend && VITE_MAX_UPLOAD_MB=4 VITE_MOSTRAR_DEMO=true npm run build -w frontend",
+    "test": "npm test -w backend"
+  },
+  "engines": {
+    "node": ">=20.19"
+  }
+}

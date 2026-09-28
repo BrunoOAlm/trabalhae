@@ -1,0 +1,91 @@
+@import "tailwindcss";
+
+@theme {
+  --color-papel: #f6f6fa;
+  --color-folha: #ffffff;
+  --color-tinta: #4b3fd1;
+  --color-tinta-escura: #362ba8;
+  --color-tinta-clara: #ecebfd;
+  --color-grafite: #1c1a33;
+  --color-grafite-suave: #5f5c78;
+  --color-linha: #e4e3ee;
+  --color-marca: #ffe45c;
+
+  --font-display: "Bricolage Grotesque Variable", "Bricolage Grotesque", ui-sans-serif, system-ui, sans-serif;
+  --font-sans: "Instrument Sans", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+
+  --animate-surgir: surgir 180ms ease-out;
+  --animate-deslizar: deslizar 220ms ease-out;
+  --animate-carimbar: carimbar 420ms cubic-bezier(0.2, 1.4, 0.4, 1) both;
+  --animate-preencher: preencher 900ms cubic-bezier(0.25, 1, 0.5, 1) both;
+
+  @keyframes surgir {
+    from { opacity: 0; transform: scale(0.96) translateY(6px); }
+    to { opacity: 1; transform: scale(1) translateY(0); }
+  }
+  @keyframes deslizar {
+    from { opacity: 0; transform: translateX(16px); }
+    to { opacity: 1; transform: translateX(0); }
+  }
+  @keyframes carimbar {
+    0% { opacity: 0; transform: rotate(-14deg) scale(1.9); }
+    60% { opacity: 1; transform: rotate(-7deg) scale(0.94); }
+    100% { opacity: 1; transform: rotate(-7deg) scale(1); }
+  }
+  @keyframes preencher {
+    from { transform: scaleX(0); }
+    to { transform: scaleX(1); }
+  }
+}
+
+@layer base {
+  html {
+    color-scheme: light;
+  }
+  body {
+    @apply bg-papel font-sans text-grafite antialiased;
+  }
+  h1, h2, h3 {
+    @apply font-display text-grafite;
+    letter-spacing: -0.015em;
+  }
+  :focus-visible {
+    outline: 2px solid var(--color-tinta);
+    outline-offset: 2px;
+    border-radius: 6px;
+  }
+  button:not(:disabled), [role="button"] {
+    cursor: pointer;
+  }
+}
+
+/* Linhas de caderno usadas na tela de entrada */
+.pauta {
+  background-image: repeating-linear-gradient(
+    to bottom,
+    transparent 0,
+    transparent 35px,
+    rgba(255, 255, 255, 0.14) 35px,
+    rgba(255, 255, 255, 0.14) 36px
+  );
+}
+
+/* Marca-texto: destaca o que é seu */
+.marca-texto {
+  background: linear-gradient(transparent 55%, var(--color-marca) 55%, var(--color-marca) 90%, transparent 90%);
+  padding: 0 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 1ms !important;
+    transition-duration: 1ms !important;
+  }
+}
+
+@media print {
+  .nao-imprimir { display: none !important; }
+  body { background: #fff; }
+  .folha-impressao { box-shadow: none !important; border: none !important; margin: 0 !important; padding: 0 !important; }
+  @page { margin: 16mm; }
+}

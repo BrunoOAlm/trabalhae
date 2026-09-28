@@ -1,0 +1,18 @@
+# dependências e builds
+node_modules/
+dist/
+
+# configuração local
+.env
+
+# arquivos enviados nas entregas
+backend/uploads/
+backend/uploads-test/
+
+# sistema
+.DS_Store
+*.log
+
+# vercel
+.vercel
+*.tsbuildinfo
